@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+ xmlns:android="http://schemas.android.com/apk/res/android"
+ android:layout_width="fill_parent"
+ android:layout_height="fill_parent"
+ android:orientation="vertical">
+
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+    <Button
+        android:id="@+id/btnDlgBin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/dlgBin" />
+    <Button
+        android:id="@+id/btnDlgFds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/dlgFds" />    
+</LinearLayout>
+<LinearLayout
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content">
+<Button
+ android:id="@+id/btnReadBin"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:text="@string/read_file_bin"
+ android:onClick="onclick">
+</Button>
+</LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <Button
+        android:id="@+id/btnChOrd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/choose_order" />
+
+    <EditText
+        android:id="@+id/edtOrbeg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/orbg"
+        android:layout_weight="1"
+        android:ems="10"
+        android:inputType="number" >
+        <requestFocus />
+        </EditText>
+    <EditText
+        android:id="@+id/edtOrend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/oren"
+        
+        android:layout_weight="1"
+        android:ems="10"
+        android:inputType="number" />
+
+</LinearLayout>
+
+<TextView
+    android:id="@+id/txtView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/txtfld" />
+
+<TextView
+    android:id="@+id/txtView2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:text="@string/txtfld2"
+    android:width="50dp" />
+
+</LinearLayout>
