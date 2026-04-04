@@ -5,13 +5,10 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-import ru.ex.dechart.ListenerList.FireHandler;
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
-import android.os.Environment;
 import android.util.Log;
 
 public class FileDialog {
@@ -29,7 +26,7 @@ public class FileDialog {
 	private File currentPath;
 	private ListenerList<FileSelectedListener> fileListenerList = new ListenerList<FileDialog.FileSelectedListener>();
 	private ListenerList<DirectorySelectedListener> dirListenerList = new ListenerList<FileDialog.DirectorySelectedListener>();
-	private final Activity activity;
+	private final AppCompatActivity activity;
 	private boolean selectDirectoryOption;
 	private String fileEndsWith;
 
@@ -37,11 +34,14 @@ public class FileDialog {
 	 * @param activity
 	 * @param initialPath
 	 */
-	public FileDialog(Activity activity, File path) {
+	public FileDialog(AppCompatActivity activity, File path) {
 		this.activity = activity;
-		if (!path.exists())
-			path = Environment.getExternalStorageDirectory();
-		loadFileList(path);
+		if (path == null || !path.exists()) {
+			path = activity.getExternalFilesDir(null);
+		}
+		if (path != null) {
+			loadFileList(path);
+		}
 	}
 
 	public void addDirectoryListener(DirectorySelectedListener listener) {
@@ -59,14 +59,16 @@ public class FileDialog {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 
-		builder.setTitle(currentPath.getPath());
+		builder.setTitle(currentPath != null ? currentPath.getPath() : "Select file");
 		if (selectDirectoryOption) {
 			builder.setPositiveButton("Select directory",
-					new OnClickListener() {
+					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							Log.d(TAG, currentPath.getPath());
-							fireDirectorySelectedEvent(currentPath);
+							Log.d(TAG, currentPath != null ? currentPath.getPath() : "");
+							if (currentPath != null) {
+								fireDirectorySelectedEvent(currentPath);
+							}
 						}
 					});
 		}
@@ -92,7 +94,7 @@ public class FileDialog {
 
 	private void fireDirectorySelectedEvent(final File directory) {
 		dirListenerList
-				.fireEvent(new FireHandler<FileDialog.DirectorySelectedListener>() {
+				.fireEvent(new ListenerList.FireHandler<DirectorySelectedListener>() {
 					@Override
 					public void fireEvent(DirectorySelectedListener listener) {
 						listener.directorySelected(directory);
@@ -102,7 +104,7 @@ public class FileDialog {
 
 	private void fireFileSelectedEvent(final File file) {
 		fileListenerList
-				.fireEvent(new FireHandler<FileDialog.FileSelectedListener>() {
+				.fireEvent(new ListenerList.FireHandler<FileSelectedListener>() {
 					@Override
 					public void fireEvent(FileSelectedListener listener) {
 						listener.fileSelected(file);
@@ -139,8 +141,10 @@ public class FileDialog {
 				}
 			};
 			String[] fileList1 = path.list(filter);
-			for (String file : fileList1) {
-				r.add(file);
+			if (fileList1 != null) {
+				for (String file : fileList1) {
+					r.add(file);
+				}
 			}
 		}
 		fileList = r.toArray(new String[] {});

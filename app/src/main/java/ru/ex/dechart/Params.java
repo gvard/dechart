@@ -6,8 +6,12 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -17,17 +21,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Params extends Activity {
+public class Params extends AppCompatActivity {
 
+	private static final int PERMISSION_REQUEST_CODE = 100;
+	
 	EditText orbg;
 	EditText oren;
 	TextView txtView;
 	final String LOG_TAG = "myLogs";
 	final String VECDIR = "Vectors";
-	private File mPath = new File(Environment.getExternalStorageDirectory()
-			+ "/" + VECDIR);
-	private File vec_fil = new File(mPath.getAbsolutePath() + "/data.100");
-	private File fds_fil = new File(mPath.getAbsolutePath() + "/waves.fds");
+	private File mPath;
+	private File vec_fil;
+	private File fds_fil;
 	int[][] datas;
 	double[][] fdz;
 	private int fcut = 8;
@@ -44,6 +49,34 @@ public class Params extends Activity {
 
 	public int little2big(byte[] b) {
 		return ((b[1] & 0xff) << 8) + (b[0] & 0xff);
+	}
+	
+	/**
+	 * Check and request permissions for file access
+	 */
+	private void checkAndRequestPermissions() {
+		if (ContextCompat.checkSelfPermission(this,
+				Manifest.permission.READ_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this,
+					new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+							Manifest.permission.WRITE_EXTERNAL_STORAGE },
+					PERMISSION_REQUEST_CODE);
+		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions,
+			int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (requestCode == PERMISSION_REQUEST_CODE) {
+			if ((grantResults.length > 0)
+					&& (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+				Log.d(LOG_TAG, "Permission granted");
+			} else {
+				Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+			}
+		}
 	}
 
 	public void onclick(View v) {
@@ -138,9 +171,22 @@ public class Params extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.params);
+		
+		// Initialize file paths
+		File storageDir = getExternalFilesDir(VECDIR);
+		if (storageDir != null && !storageDir.exists()) {
+			storageDir.mkdirs();
+		}
+		mPath = storageDir;
+		vec_fil = new File(mPath.getAbsolutePath() + "/data.100");
+		fds_fil = new File(mPath.getAbsolutePath() + "/waves.fds");
+		
 		txtView = (TextView) findViewById(R.id.txtView);
 		orbg = (EditText) findViewById(R.id.edtOrbeg);
 		oren = (EditText) findViewById(R.id.edtOrend);
+		
+		// Check permissions
+		checkAndRequestPermissions();
 	}
 
 	@Override
@@ -151,90 +197,51 @@ public class Params extends Activity {
 	}
 
 	public int[][] ReadBinFil() throws IOException {
-		if (!Environment.getExternalStorageState().equals(
-				Environment.MEDIA_MOUNTED)) {
-			Log.d(LOG_TAG,
-					"SDcard not avaliable: "
-							+ Environment.getExternalStorageState());
-			return null;
-		}
-		try {
-			RandomAccessFile fp = new RandomAccessFile(vec_fil, "r");
-			int next = 0;
-			byte[] buffer = new byte[2];
-			fp.seek(10);
-			fp.read(buffer);
-			onum = little2big(buffer);
-			fp.read(buffer);
-			olen = little2big(buffer);
-			String a = "reading 100! Orders & Length: " + String.valueOf(onum)
-					+ " " + String.valueOf(olen);
-			Log.d(LOG_TAG, "Begin " + a);
-			if (onum < orend) {
-				orend = onum;
-				oren.setText(String.valueOf(onum));
-			}
-			onum = orend;
-			int[][] datz = new int[onum][olen];
-			for (int i = 0; i < onum; i++) {
-				for (int j = 0; j < olen; j++) {
+		RandomAccessFile file = new RandomAccessFile(vec_fil, "r");
+		int fl = (int) file.length();
+		byte[] b = new byte[4];
 
-					fp.read(buffer);
-					next = little2big(buffer);
-					datz[i][j] = next;
-				}
+		// read header
+		file.read(b);
+		onum = lit2big(b);
+		file.read(b);
+		olen = lit2big(b);
+
+		Log.d(LOG_TAG, "Onum: " + onum + " Olen: " + olen);
+
+		int[][] myarray = new int[onum][olen];
+
+		for (int i = 0; i < onum; i++) {
+			for (int j = 0; j < olen; j++) {
+				file.read(b);
+				myarray[i][j] = lit2big(b);
 			}
-			int l = datz.length;
-			int n = datz[0].length;
-			Log.d(LOG_TAG,
-					"Complete " + a + ", Datz dims: " + String.valueOf(l) + " "
-							+ String.valueOf(n));
-			txtView.setText(a);
-			fp.close();
-			return datz;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
-		return null;
+		file.close();
+		return myarray;
 	}
 
 	public double[][] ReadFds() throws IOException {
-		if (!Environment.getExternalStorageState().equals(
-				Environment.MEDIA_MOUNTED)) {
-			Log.d(LOG_TAG,
-					"SDcard not avaliable: "
-							+ Environment.getExternalStorageState());
-			return null;
-		}
-		int next = 0;
-		Log.d(LOG_TAG, "ReadFds beg with len " + String.valueOf(onum) + ", "
-				+ String.valueOf(olen));
-		try {
-			RandomAccessFile fp = new RandomAccessFile(fds_fil, "r");
-			byte[] buffer = new byte[4];
-			double[][] fdz = new double[onum][olen];
-			for (int i = 0; i < onum; i++) {
-				for (int j = 0; j < olen; j++) {
-					fp.read(buffer);
-					next = lit2big(buffer);
-					fdz[i][j] = (double) next / 10000;
-				}
+		RandomAccessFile file = new RandomAccessFile(fds_fil, "r");
+		byte[] b = new byte[2];
+
+		// read header
+		file.read(b);
+		int xlen = little2big(b);
+		file.read(b);
+		int ylen = little2big(b);
+
+		Log.d(LOG_TAG, "Xlen: " + xlen + " Ylen: " + ylen);
+
+		double[][] myarray = new double[ylen][xlen];
+
+		for (int i = 0; i < ylen; i++) {
+			for (int j = 0; j < xlen; j++) {
+				file.read(b);
+				myarray[i][j] = (double) little2big(b);
 			}
-			String a = "Complete Reading fds! Orders & Length: "
-					+ String.valueOf(onum) + " " + String.valueOf(olen);
-			String b = String.valueOf(fdz[0][0]) + " - "
-					+ String.valueOf(fdz[onum - 1][olen - 1]);
-			Log.d(LOG_TAG, a + ", wvrange " + b);
-			txtView.setText(a + ", wvrange " + b);
-			fp.close();
-			return fdz;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
-		return null;
+		file.close();
+		return myarray;
 	}
 }

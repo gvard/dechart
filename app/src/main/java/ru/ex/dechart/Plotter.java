@@ -11,7 +11,7 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-public class Plotter extends Activity {
+public class Plotter extends AppCompatActivity {
 
 	private GraphicalView mChart;
 	private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
@@ -90,36 +90,50 @@ public class Plotter extends Activity {
 
 		Intent intent = getIntent();
 		Bundle bu = intent.getExtras();
-		orbeg = intent.getIntExtra("orbeg", 0);
-		orend = intent.getIntExtra("orend", 0);
-		for (int i = orbeg - 1; i < orend; i++) {
-			String alab = String.valueOf(i);
-			String blab = String.valueOf(500 + i);
-			xes = (double[]) bu.getSerializable(alab);
-			x.add(xes);
-			vls = (int[]) bu.getSerializable(blab);
-			vals.add(vls);
+		if (bu != null) {
+			orbeg = intent.getIntExtra("orbeg", 0);
+			orend = intent.getIntExtra("orend", 0);
+			for (int i = orbeg - 1; i < orend; i++) {
+				String alab = String.valueOf(i);
+				String blab = String.valueOf(500 + i);
+				xes = (double[]) bu.getSerializable(alab);
+				x.add(xes);
+				vls = (int[]) bu.getSerializable(blab);
+				vals.add(vls);
+			}
 		}
 		Log.d(LOG_TAG, "Complete gettin arrays!");
 
-		butzin.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mChart.zoomIn();
-			}
-		});
-		butzout.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mChart.zoomOut();
-			}
-		});
-		butone.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mChart.zoomReset();
-			}
-		});
+		if (butzin != null) {
+			butzin.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (mChart != null) {
+						mChart.zoomIn();
+					}
+				}
+			});
+		}
+		if (butzout != null) {
+			butzout.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (mChart != null) {
+						mChart.zoomOut();
+					}
+				}
+			});
+		}
+		if (butone != null) {
+			butone.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (mChart != null) {
+						mChart.zoomReset();
+					}
+				}
+			});
+		}
 	}
 
 	@Override
@@ -149,8 +163,7 @@ public class Plotter extends Activity {
 			// mChart = ChartFactory.getCubeLineChartView(this, mDataset,
 			// mRenderer, 1f);
 			layout.addView(mChart);
-		} else {
-			mChart.repaint();
+			Log.d(LOG_TAG, "End of onResume");
 		}
 	}
 }

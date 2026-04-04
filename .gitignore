@@ -1,16 +1,66 @@
-# Compiled class file
+# Build directories
+build/
+app/build/
+*/build/
+.gradle/
+
+# Local configuration
+local.properties
+gradle.properties
+
+# IDE-specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Android Studio
+.android/
+captures/
+lint-baseline.xml
+
+# Generated files
+gen/
+out/
+
+# Gradle
+.gradle
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Built APK/AAB
+*.apk
+*.aab
+*.bundleconfig
+
+# Compiled files
 *.class
+*.jar
+!gradle-wrapper.jar
+*.so
 
-# Log file
+# Log files
 *.log
+crash-report-*
 
-# BlueJ files
-*.ctxt
+# OS-specific files
+.DS_Store
+Thumbs.db
+.directory
 
-# Mobile Tools for Java (J2ME)
+# Editor backups and temp files
+*~
+*.swp
+*.swo
+*.orig
+*.backup
+
+# Java
 .mtj.tmp/
 
-# Package Files #
+# Package Files
 *.war
 *.nar
 *.ear
@@ -18,5 +68,12 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# VM crash logs
 hs_err_pid*
+
+# Test coverage
+coverage/
+*.coverage
+
+# Git
+.git
