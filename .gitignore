@@ -38,6 +38,7 @@ gradle-app.setting
 # Compiled files
 *.class
 *.jar
+!app/libs/achartengine-1.2.0.jar
 !gradle-wrapper.jar
 *.so
 
