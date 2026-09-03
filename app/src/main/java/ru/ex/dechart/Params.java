@@ -335,6 +335,9 @@ public class Params extends AppCompatActivity {
 		orbg = (EditText) findViewById(R.id.edtOrbeg);
 		oren = (EditText) findViewById(R.id.edtOrend);
 
+		orbg.setText("1");
+		oren.setText("3");
+
 		checkAndRequestPermissions();
 
 		updateFileStatus();
