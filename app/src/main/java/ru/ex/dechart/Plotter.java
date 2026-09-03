@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 public class Plotter extends AppCompatActivity {
 
@@ -39,34 +40,46 @@ public class Plotter extends AppCompatActivity {
 	int orend;
 
 	public void mkSeriesRenderer() {
-		int lengt = orend - orbeg + 1;
-		String[] titles = new String[lengt];
-		for (int i = orbeg; i <= orend; i++) {
-			titles[i - orbeg] = "Order #" + String.valueOf(i);
+		// Use actual data size instead of expected range
+		int actualDataCount = Math.min(x.size(), vals.size());
+		if (actualDataCount == 0) {
+			Log.e(LOG_TAG, "No data available to render");
+			return;
 		}
+
+		String[] titles = new String[actualDataCount];
+		for (int i = 0; i < actualDataCount; i++) {
+			titles[i] = "Order #" + String.valueOf(orbeg + i);
+		}
+
 		int[] clrs = new int[] { Color.BLUE, Color.GREEN, Color.CYAN,
 				Color.YELLOW, Color.RED, Color.LTGRAY, Color.MAGENTA,
 				Color.WHITE }; // Color.DKGRAY
-		int[] colors = new int[lengt];
-		for (int i = 0; i <= orend - orbeg; i++) {
+		int[] colors = new int[actualDataCount];
+		for (int i = 0; i < actualDataCount; i++) {
 			colors[i] = clrs[i % clrs.length];
 		}
 
 		PointStyle[] styls = new PointStyle[] { PointStyle.CIRCLE,
 				PointStyle.DIAMOND, PointStyle.TRIANGLE, PointStyle.SQUARE };
-		PointStyle[] styles = new PointStyle[lengt];
-		for (int i = 0; i <= orend - orbeg; i++) {
+		PointStyle[] styles = new PointStyle[actualDataCount];
+		for (int i = 0; i < actualDataCount; i++) {
 			Log.d(LOG_TAG, String.valueOf(i % clrs.length));
 			styles[i] = styls[i % styls.length];
 		}
+
 		int scale = 0;
-		for (int i = 0; i < lengt; i++) {
+		for (int i = 0; i < actualDataCount; i++) {
 			mCurrentSeries = new XYSeries(titles[i], scale);
 			double[] xV = x.get(i);
 			int[] yV = vals.get(i);
-			int seriesLength = xV.length;
-			for (int k = 0; k < seriesLength; k++) {
-				mCurrentSeries.add(xV[k], yV[k]);
+
+			// Ensure arrays are not null and have data
+			if (xV != null && yV != null && xV.length > 0 && yV.length > 0) {
+				int seriesLength = Math.min(xV.length, yV.length);
+				for (int k = 0; k < seriesLength; k++) {
+					mCurrentSeries.add(xV[k], yV[k]);
+				}
 			}
 			mDataset.addSeries(mCurrentSeries);
 			mCurrentRenderer = new XYSeriesRenderer();
@@ -93,15 +106,48 @@ public class Plotter extends AppCompatActivity {
 		if (bu != null) {
 			orbeg = intent.getIntExtra("orbeg", 0);
 			orend = intent.getIntExtra("orend", 0);
+
+			// Validate received data
+			if (orbeg <= 0 || orend <= 0 || orend < orbeg) {
+				Log.e(LOG_TAG, "Invalid orbeg/orend values: orbeg=" + orbeg + ", orend=" + orend);
+				finish(); // Close activity if invalid data
+				return;
+			}
+
 			for (int i = orbeg - 1; i < orend; i++) {
 				String alab = String.valueOf(i);
 				String blab = String.valueOf(500 + i);
 				xes = (double[]) bu.getSerializable(alab);
-				x.add(xes);
 				vls = (int[]) bu.getSerializable(blab);
+
+				// Check if data exists
+				if (xes == null || vls == null) {
+					Log.e(LOG_TAG, "Missing data for order " + (i + 1) + ": xes=" + (xes != null) + ", vls=" + (vls != null));
+					continue; // Skip this order if data is missing
+				}
+
+				// Check if arrays have the same length
+				if (xes.length != vls.length) {
+					Log.e(LOG_TAG, "Array length mismatch for order " + (i + 1) + ": xes.length=" + xes.length + ", vls.length=" + vls.length);
+					continue; // Skip this order if arrays don't match
+				}
+
+				x.add(xes);
 				vals.add(vls);
 			}
+		} else {
+			Log.e(LOG_TAG, "No bundle data received");
+			finish(); // Close activity if no data
+			return;
 		}
+
+		// Check if we have any valid data
+		if (x.isEmpty() || vals.isEmpty()) {
+			Log.e(LOG_TAG, "No valid data to plot");
+			finish(); // Close activity if no data to plot
+			return;
+		}
+
 		Log.d(LOG_TAG, "Complete gettin arrays!");
 
 		if (butzin != null) {
@@ -142,6 +188,15 @@ public class Plotter extends AppCompatActivity {
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
 		if (mChart == null) {
 			mkSeriesRenderer();
+
+			// Check if we have any series to display
+			if (mDataset.getSeriesCount() == 0) {
+				Log.e(LOG_TAG, "No chart series created - no data to display");
+				Toast.makeText(this, "No data available to plot", Toast.LENGTH_LONG).show();
+				finish(); // Close activity if no data
+				return;
+			}
+
 			// mRenderer.setInScroll(true);
 			Log.d(LOG_TAG, "Setin props!");
 			mRenderer.setXLabels(9);
@@ -163,7 +218,9 @@ public class Plotter extends AppCompatActivity {
 			// mChart = ChartFactory.getCubeLineChartView(this, mDataset,
 			// mRenderer, 1f);
 			layout.addView(mChart);
-			Log.d(LOG_TAG, "End of onResume");
+			// Log.d(LOG_TAG, "End of onResume");
+		} else {
+			mChart.repaint();
 		}
 	}
 }
