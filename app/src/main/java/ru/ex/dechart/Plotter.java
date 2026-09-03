@@ -28,9 +28,6 @@ public class Plotter extends AppCompatActivity {
 	private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
 	private XYSeries mCurrentSeries;
 	private XYSeriesRenderer mCurrentRenderer;
-	private Button butzout;
-	private Button butzin;
-	private Button butone;
 	final String LOG_TAG = "myLogs";
 	List<double[]> x = new ArrayList<double[]>();
 	List<int[]> vals = new ArrayList<int[]>();
@@ -97,9 +94,6 @@ public class Plotter extends AppCompatActivity {
 		// requestWindowFeature(Window.FEATURE_NO_TITLE);
 		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 		// WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		butzin = (Button) findViewById(R.id.butzin);
-		butzout = (Button) findViewById(R.id.butzout);
-		butone = (Button) findViewById(R.id.butone);
 
 		Intent intent = getIntent();
 		Bundle bu = intent.getExtras();
@@ -150,36 +144,6 @@ public class Plotter extends AppCompatActivity {
 
 		Log.d(LOG_TAG, "Complete gettin arrays!");
 
-		if (butzin != null) {
-			butzin.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					if (mChart != null) {
-						mChart.zoomIn();
-					}
-				}
-			});
-		}
-		if (butzout != null) {
-			butzout.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					if (mChart != null) {
-						mChart.zoomOut();
-					}
-				}
-			});
-		}
-		if (butone != null) {
-			butone.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					if (mChart != null) {
-						mChart.zoomReset();
-					}
-				}
-			});
-		}
 	}
 
 	@Override
@@ -201,25 +165,59 @@ public class Plotter extends AppCompatActivity {
 			Log.d(LOG_TAG, "Setin props!");
 			mRenderer.setXLabels(9);
 			mRenderer.setYLabels(6);
+			mRenderer.setLabelsTextSize(26f);
 			// mRenderer.setAxisTitleTextSize(15);
-			mRenderer.setLabelsTextSize(15);
+			// mRenderer.setAxisTitleTextSize(24f);
+			mRenderer.setLegendTextSize(32f);
 			// mRenderer.setClickEnabled(true);
-			mRenderer.setZoomButtonsVisible(true);
+			mRenderer.setZoomButtonsVisible(false);
 			mRenderer.setZoomEnabled(true);
 			mRenderer.setExternalZoomEnabled(true);
-			mRenderer.setMargins(new int[] { 0, 18, -110, 0 });
+			mRenderer.setMargins(new int[] { 6, 90, 40, 6 });
+			mRenderer.setYLabelsAlign(android.graphics.Paint.Align.RIGHT);
+			mRenderer.setXLabelsAlign(android.graphics.Paint.Align.CENTER);
+			mRenderer.setFitLegend(true);
+			mRenderer.setInScroll(false);
 			mRenderer.setPointSize(1f);
 			mRenderer.setShowGrid(true);
 			mRenderer.setApplyBackgroundColor(true);
 			mRenderer.setBackgroundColor(Color.BLACK);
-			mRenderer.setMarginsColor(Color.DKGRAY);
+			mRenderer.setMarginsColor(Color.parseColor("#121212"));
 			Log.d(LOG_TAG, "Entering ChartFactory!");
 			mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
 			// mChart = ChartFactory.getCubeLineChartView(this, mDataset,
 			// mRenderer, 1f);
 			layout.addView(mChart);
+
+			final android.view.GestureDetector gestureDetector = new android.view.GestureDetector(this,
+                new android.view.GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDoubleTap(android.view.MotionEvent e) {
+                        if (mChart != null) {
+                            mChart.zoomReset();
+                            Toast.makeText(Plotter.this, "Zoom reset", Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+            mChart.setOnTouchListener(new android.view.View.OnTouchListener() {
+                @Override
+                public boolean onTouch(android.view.View v, android.view.MotionEvent event) {
+                    gestureDetector.onTouchEvent(event);
+                    return false;
+                }
+            });
 			// Log.d(LOG_TAG, "End of onResume");
 		} else {
+			mChart.repaint();
+		}
+	}
+	@Override
+	public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		if (mChart != null) {
 			mChart.repaint();
 		}
 	}
