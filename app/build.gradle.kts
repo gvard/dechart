@@ -36,6 +36,13 @@ android {
         viewBinding = false
         aidl = false
     }
+    sourceSets {
+        getByName("debug") {
+            assets {
+                srcDirs("src\\debug\\assets")
+            }
+        }
+    }
 }
 
 dependencies {
