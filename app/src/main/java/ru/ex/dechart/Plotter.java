@@ -10,22 +10,25 @@ import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
+import org.achartengine.tools.Zoom;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.graphics.DashPathEffect;
 
 public class Plotter extends AppCompatActivity {
 
 	private GraphicalView mChart;
 	private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
 	private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
+	private org.achartengine.tools.Zoom mPinchZoomEngine;
 	private XYSeries mCurrentSeries;
 	private XYSeriesRenderer mCurrentRenderer;
 	final String LOG_TAG = "myLogs";
@@ -81,7 +84,10 @@ public class Plotter extends AppCompatActivity {
 			mDataset.addSeries(mCurrentSeries);
 			mCurrentRenderer = new XYSeriesRenderer();
 			mCurrentRenderer.setColor(colors[i]);
-			mCurrentRenderer.setPointStyle(styles[i]);
+
+			mCurrentRenderer.setPointStyle(org.achartengine.chart.PointStyle.POINT);
+
+			mCurrentRenderer.setLineWidth(2f);
 			mRenderer.addSeriesRenderer(mCurrentRenderer);
 		}
 	}
@@ -166,50 +172,163 @@ public class Plotter extends AppCompatActivity {
 			mRenderer.setXLabels(9);
 			mRenderer.setYLabels(6);
 			mRenderer.setLabelsTextSize(26f);
-			// mRenderer.setAxisTitleTextSize(15);
 			// mRenderer.setAxisTitleTextSize(24f);
 			mRenderer.setLegendTextSize(32f);
 			// mRenderer.setClickEnabled(true);
 			mRenderer.setZoomButtonsVisible(false);
 			mRenderer.setZoomEnabled(true);
-			mRenderer.setExternalZoomEnabled(true);
+			mRenderer.setPanEnabled(true);
+			mRenderer.setExternalZoomEnabled(false);
 			mRenderer.setMargins(new int[] { 6, 90, 40, 6 });
 			mRenderer.setYLabelsAlign(android.graphics.Paint.Align.RIGHT);
 			mRenderer.setXLabelsAlign(android.graphics.Paint.Align.CENTER);
 			mRenderer.setFitLegend(true);
 			mRenderer.setInScroll(false);
-			mRenderer.setPointSize(1f);
+			// mRenderer.setPointSize(4f);
 			mRenderer.setShowGrid(true);
+
+			mRenderer.setGridColor(android.graphics.Color.parseColor("#333333"));
+			mRenderer.setAxesColor(android.graphics.Color.parseColor("#777777"));
+			mRenderer.setLabelsColor(android.graphics.Color.parseColor("#777777"));
+			mRenderer.setXLabelsColor(android.graphics.Color.parseColor("#777777"));
+            mRenderer.setYLabelsColor(0, android.graphics.Color.parseColor("#777777"));
+
 			mRenderer.setApplyBackgroundColor(true);
 			mRenderer.setBackgroundColor(Color.BLACK);
 			mRenderer.setMarginsColor(Color.parseColor("#121212"));
+			mRenderer.setTextTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD));
+
 			Log.d(LOG_TAG, "Entering ChartFactory!");
 			mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
-			// mChart = ChartFactory.getCubeLineChartView(this, mDataset,
-			// mRenderer, 1f);
 			layout.addView(mChart);
 
-			final android.view.GestureDetector gestureDetector = new android.view.GestureDetector(this,
+			mPinchZoomEngine = new org.achartengine.tools.Zoom(mChart.getChart(), true, 1);
+
+			final double initialXMin = mRenderer.getXAxisMin();
+			final double initialXMax = mRenderer.getXAxisMax();
+			final double initialYMin = mRenderer.getYAxisMin();
+			final double initialYMax = mRenderer.getYAxisMax();
+			updateAdaptivePointSizing(true);
+
+			final android.view.GestureDetector nativeGestureDetector = new android.view.GestureDetector(this,
                 new android.view.GestureDetector.SimpleOnGestureListener() {
                     @Override
                     public boolean onDoubleTap(android.view.MotionEvent e) {
-                        if (mChart != null) {
-                            mChart.zoomReset();
-                            Toast.makeText(Plotter.this, "Zoom reset", Toast.LENGTH_SHORT).show();
-                            return true;
-                        }
-                        return false;
+
+                        mRenderer.setPanEnabled(false, false);
+                        mRenderer.setXAxisMin(initialXMin);
+                        mRenderer.setXAxisMax(initialXMax);
+                        mRenderer.setYAxisMin(initialYMin);
+                        mRenderer.setYAxisMax(initialYMax);
+						updateAdaptivePointSizing(true);
+                        mChart.repaint();
+                        return true;
                     }
                 });
 
-            mChart.setOnTouchListener(new android.view.View.OnTouchListener() {
+            mChart.setOnTouchListener(new View.OnTouchListener() {
+                private float startX = -1, startY = -1, startX2 = -1, startY2 = -1;
+                private boolean isPinch = false;
+                private long lastPinchTime = 0;
+
                 @Override
-                public boolean onTouch(android.view.View v, android.view.MotionEvent event) {
-                    gestureDetector.onTouchEvent(event);
+                public boolean onTouch(View v, MotionEvent event) {
+                    int action = event.getAction() & MotionEvent.ACTION_MASK;
+                    long currentTime = System.currentTimeMillis();
+
+                    nativeGestureDetector.onTouchEvent(event);
+
+                    if (action == MotionEvent.ACTION_DOWN) {
+                        startX = event.getX(0);
+                        startY = event.getY(0);
+
+                        if (currentTime - lastPinchTime < 300) {
+                            mRenderer.setPanEnabled(true, true);
+                        }
+                    }
+
+                    if (!isPinch && (currentTime - lastPinchTime < 300)) {
+                        if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
+                            mRenderer.setPanEnabled(false, false);
+                            return true;
+                        }
+                    } else if (!isPinch) {
+                        mRenderer.setPanEnabled(true, true);
+                    }
+
+                    if (event.getPointerCount() == 1 && action == MotionEvent.ACTION_MOVE) {
+                        startX = event.getX(0);
+                        startY = event.getY(0);
+                    }
+
+                    if (event.getPointerCount() > 1) {
+                        isPinch = true;
+                        mRenderer.setPanEnabled(false, false);
+
+                        if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                            startX = event.getX(0); startY = event.getY(0);
+                            startX2 = event.getX(1); startY2 = event.getY(1);
+                            return true;
+                        }
+
+                        if (action == MotionEvent.ACTION_MOVE && startX >= 0 && startY >= 0 && startX2 >= 0 && startY2 >= 0) {
+                            float newX = event.getX(0);
+                            float newY = event.getY(0);
+                            float newX2 = event.getX(1);
+                            float newY2 = event.getY(1);
+
+                            float currentDeltaX = Math.abs(newX - newX2);
+                            float currentDeltaY = Math.abs(newY - newY2);
+                            float startDeltaX = Math.abs(startX - startX2);
+                            float startDeltaY = Math.abs(startY - startY2);
+
+                            float tan1 = Math.abs(newY - startY) / (Math.abs(newX - startX) + 0.001f);
+                            float tan2 = Math.abs(newY2 - startY2) / (Math.abs(newX2 - startX2) + 0.001f);
+
+                            float zoomRateX = currentDeltaX / (startDeltaX + 0.001f);
+                            float zoomRateY = currentDeltaY / (startDeltaY + 0.001f);
+
+                            // Горизонтальный жест — масштабируем X
+                            if (tan1 <= 0.7f && tan2 <= 0.7f) {
+                                mPinchZoomEngine.setZoomRate(zoomRateX);
+                                mPinchZoomEngine.apply(org.achartengine.tools.Zoom.ZOOM_AXIS_X);
+								updateAdaptivePointSizing(false);
+                            }
+                            // Вертикальный жест — масштабируем Y
+                            else if (tan1 >= 1.4f && tan2 >= 1.4f) {
+                                mPinchZoomEngine.setZoomRate(zoomRateY);
+                                mPinchZoomEngine.apply(org.achartengine.tools.Zoom.ZOOM_AXIS_Y);
+								updateAdaptivePointSizing(false);
+                            }
+                            // Диагональный жест — масштабируем обе оси
+                            else {
+                                float combinedRate = (Math.abs(newX - startX) >= Math.abs(newY - startY)) ? zoomRateX : zoomRateY;
+                                mPinchZoomEngine.setZoomRate(combinedRate);
+                                mPinchZoomEngine.apply(org.achartengine.tools.Zoom.ZOOM_AXIS_XY);
+								updateAdaptivePointSizing(false);
+                            }
+
+                            startX = newX; startY = newY; startX2 = newX2; startY2 = newY2;
+                            mChart.repaint();
+                            return true;
+                        }
+                        return true;
+                    }
+
+                    // Завершение жеста мультитача
+                    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
+                        if (isPinch) {
+                            isPinch = false;
+                            lastPinchTime = System.currentTimeMillis();
+                            mRenderer.setPanEnabled(false, false);
+                            startX = -1; startY = -1; startX2 = -1; startY2 = -1;
+                            mChart.repaint();
+                            return true;
+                        }
+                    }
                     return false;
                 }
             });
-			// Log.d(LOG_TAG, "End of onResume");
 		} else {
 			mChart.repaint();
 		}
@@ -221,4 +340,55 @@ public class Plotter extends AppCompatActivity {
 			mChart.repaint();
 		}
 	}
+
+    private void updateAdaptivePointSizing(boolean forceMicroPoints) {
+        if (mRenderer != null && mChart != null) {
+            double xMin = mRenderer.getXAxisMin();
+            double xMax = mRenderer.getXAxisMax();
+            double currentRange = xMax - xMin;
+
+            // Вычисляем оптимальный размер точек
+            float calculatedSize = 4.0f;
+            boolean useMicroPoints = forceMicroPoints; // Если передан флаг — сразу включаем микро-точки
+
+            if (!useMicroPoints) {
+                if (currentRange > 150 || currentRange == 0.0) {
+                    calculatedSize = 1.0f;
+                    useMicroPoints = true;
+                } else if (currentRange > 50) {
+                    calculatedSize = 2.0f;
+                } else {
+                    calculatedSize = 4.0f;
+                }
+            } else {
+                calculatedSize = 1.0f;
+            }
+
+            mRenderer.setPointSize(calculatedSize);
+
+            org.achartengine.chart.PointStyle[] styls = new org.achartengine.chart.PointStyle[] {
+                org.achartengine.chart.PointStyle.CIRCLE,
+                org.achartengine.chart.PointStyle.DIAMOND,
+                org.achartengine.chart.PointStyle.TRIANGLE,
+                org.achartengine.chart.PointStyle.SQUARE
+            };
+
+            int seriesCount = mRenderer.getSeriesRendererCount();
+            for (int i = 0; i < seriesCount; i++) {
+                org.achartengine.renderer.SimpleSeriesRenderer r = mRenderer.getSeriesRendererAt(i);
+                if (r instanceof org.achartengine.renderer.XYSeriesRenderer) {
+                    org.achartengine.renderer.XYSeriesRenderer xyr = (org.achartengine.renderer.XYSeriesRenderer) r;
+
+                    if (useMicroPoints) {
+                        xyr.setPointStyle(org.achartengine.chart.PointStyle.POINT);
+                        xyr.setPointStrokeWidth(1f);
+                    } else {
+                        // Режим зума
+                        xyr.setPointStyle(styls[i % styls.length]);
+                        xyr.setPointStrokeWidth(calculatedSize >= 4.0f ? 5f : 1f);
+                    }
+                }
+            }
+        }
+    }
 }
