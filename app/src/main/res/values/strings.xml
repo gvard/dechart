@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">deChart</string>
+    <string name="action_settings">Settings</string>
+    <string name="choose_order">Choose an orders to plot</string>
+    <string name="read_file_bin">Read a bin files</string>
+    <string name="dlgBin">Choose a bin file</string>
+    <string name="orbg">1</string>
+    <string name="oren">3</string>
+    <string name="plus">plus</string>
+    <string name="minus">minus</string>
+    <string name="nozoom">nozoom</string>
+    <string name="dlgFds">Choose a fds file</string>
+    <string name="txtfld">Choose files first, than read bin files. Finally, choose order numbers and plot.</string>
+    <string name="txtfld2"> </string>
+    
+</resources>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+ xmlns:android="http://schemas.android.com/apk/res/android"
+ android:layout_width="fill_parent"
+ android:layout_height="fill_parent"
+ android:orientation="vertical">
+
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+    <Button
+        android:id="@+id/btnDlgBin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/dlgBin" />
+    <Button
+        android:id="@+id/btnDlgFds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/dlgFds" />    
+</LinearLayout>
+<LinearLayout
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content">
+<Button
+ android:id="@+id/btnReadBin"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:text="@string/read_file_bin"
+ android:onClick="onclick">
+</Button>
+</LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <Button
+        android:id="@+id/btnChOrd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onclick"
+        android:text="@string/choose_order" />
+
+    <EditText
+        android:id="@+id/edtOrbeg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/orbg"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/edtOrend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/oren"
+        android:inputType="number" />
+
+</LinearLayout>
+
+<TextView
+    android:id="@+id/txtView"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:text="@string/txtfld" />
+
+</LinearLayout>
