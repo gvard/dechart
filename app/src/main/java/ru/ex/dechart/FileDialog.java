@@ -36,9 +36,17 @@ public class FileDialog {
 	 */
 	public FileDialog(AppCompatActivity activity, File path) {
 		this.activity = activity;
+
+		if (path == null || !path.exists()) {
+			path = android.os.Environment.getExternalStoragePublicDirectory(
+				android.os.Environment.DIRECTORY_DOWNLOADS
+			);
+		}
+
 		if (path == null || !path.exists()) {
 			path = activity.getExternalFilesDir(null);
 		}
+
 		if (path != null) {
 			loadFileList(path);
 		}
@@ -125,21 +133,31 @@ public class FileDialog {
 		if (path.exists()) {
 			if (path.getParentFile() != null)
 				r.add(PARENT_DIR);
+
 			FilenameFilter filter = new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String filename) {
 					File sel = new File(dir, filename);
-					if (!sel.canRead())
+
+					if (sel.isDirectory()) {
+						return true;
+					}
+
+					if (selectDirectoryOption) {
 						return false;
-					if (selectDirectoryOption)
-						return sel.isDirectory();
-					else {
-						boolean endsWith = fileEndsWith != null ? filename
-								.toLowerCase().endsWith(fileEndsWith) : true;
-						return endsWith || sel.isDirectory();
+					} else {
+						String nameLower = filename.toLowerCase();
+
+						if (fileEndsWith == null) {
+							return true;
+						}
+
+						return nameLower.endsWith(fileEndsWith) ||
+						       nameLower.endsWith("." + fileEndsWith);
 					}
 				}
 			};
+
 			String[] fileList1 = path.list(filter);
 			if (fileList1 != null) {
 				for (String file : fileList1) {
