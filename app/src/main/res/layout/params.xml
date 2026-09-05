@@ -3,58 +3,78 @@
  xmlns:android="http://schemas.android.com/apk/res/android"
  android:layout_width="fill_parent"
  android:layout_height="fill_parent"
- android:orientation="vertical">
-
+ android:orientation="vertical"
+ android:background="@color/theme_background"
+ android:padding="12dp">
 
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp" >
     <Button
         android:id="@+id/btnDlgBin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="onclick"
-        android:text="@string/dlgBin" />
+        android:text="@string/dlgBin"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_button"
+        android:layout_marginEnd="8dp" />
     <Button
         android:id="@+id/btnDlgFds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="onclick"
-        android:text="@string/dlgFds" />    
+        android:text="@string/dlgFds"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_button" />
 </LinearLayout>
+
 <LinearLayout
  android:layout_width="match_parent"
- android:layout_height="wrap_content">
+ android:layout_height="wrap_content"
+ android:layout_marginBottom="8dp">
 <Button
  android:id="@+id/btnReadBin"
  android:layout_width="wrap_content"
  android:layout_height="wrap_content"
  android:text="@string/read_file_bin"
- android:onClick="onclick">
+ android:onClick="onclick"
+ android:textAllCaps="false"
+ android:textColor="#FFFFFF"
+ android:background="@drawable/rounded_button">
 </Button>
 </LinearLayout>
 
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp" >
 
     <Button
         android:id="@+id/btnChOrd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="onclick"
-        android:text="@string/choose_order" />
+        android:text="@string/choose_order"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_button"
+        android:layout_marginEnd="8dp" />
 
     <EditText
         android:id="@+id/edtOrbeg"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:hint="@string/orbg"
-        android:inputType="number" />
+        android:inputType="number"
+        android:layout_marginEnd="8dp" />
 
     <EditText
         android:id="@+id/edtOrend"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:hint="@string/oren"
         android:inputType="number" />
@@ -65,6 +85,9 @@
     android:id="@+id/txtView"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:text="@string/txtfld" />
+    android:text="@string/txtfld"
+    android:textSize="16sp"
+    android:textColor="@color/theme_text"
+    android:padding="4dp" />
 
 </LinearLayout>
